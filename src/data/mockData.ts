@@ -40,6 +40,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 6999.90,
     unit: 'unidade',
     location: 'Sala 101',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-01-10'),
     updatedAt: new Date('2023-01-10')
   },
@@ -53,6 +54,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 1899.90,
     unit: 'unidade',
     location: 'Sala 102',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-01-15'),
     updatedAt: new Date('2023-01-15')
   },
@@ -66,6 +68,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 899.90,
     unit: 'unidade',
     location: 'Depósito',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-02-01'),
     updatedAt: new Date('2023-02-01')
   },
@@ -79,6 +82,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 25.90,
     unit: 'pacote',
     location: 'Almoxarifado',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-02-10'),
     updatedAt: new Date('2023-02-10')
   },
@@ -92,6 +96,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 599.90,
     unit: 'unidade',
     location: 'Depósito',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-03-01'),
     updatedAt: new Date('2023-03-01')
   },
@@ -105,6 +110,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 499.90,
     unit: 'unidade',
     location: 'Sala 101',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-03-15'),
     updatedAt: new Date('2023-03-15')
   },
@@ -118,6 +124,7 @@ export const inventoryItems: InventoryItem[] = [
     price: 49.90,
     unit: 'unidade',
     location: 'Almoxarifado',
+    status: 'AVAILABLE',
     createdAt: new Date('2023-04-01'),
     updatedAt: new Date('2023-04-01')
   }
