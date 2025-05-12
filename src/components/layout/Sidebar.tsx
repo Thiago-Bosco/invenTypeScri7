@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, 
   BarChart3, 
@@ -9,9 +9,12 @@ import {
   ArrowRightLeft, 
   Menu, 
   X, 
-  Settings 
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 type SidebarProps = {
   className?: string;
@@ -19,9 +22,21 @@ type SidebarProps = {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logout realizado",
+      description: "Você foi desconectado com sucesso"
+    });
+    navigate('/login');
   };
 
   return (
@@ -93,6 +108,18 @@ const Sidebar = ({ className }: SidebarProps) => {
               text="Configurações"
               collapsed={collapsed}
             />
+            <li>
+              <button
+                onClick={handleLogout}
+                className={cn(
+                  'flex w-full items-center rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent',
+                  !collapsed && 'px-4'
+                )}
+              >
+                <span className="mr-3"><LogOut size={20} /></span>
+                {!collapsed && <span>Sair</span>}
+              </button>
+            </li>
           </ul>
         </div>
       </div>
