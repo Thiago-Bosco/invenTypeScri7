@@ -17,6 +17,15 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { InventoryItem } from '@/types/inventory';
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const ItemForm = () => {
   const { id } = useParams();
@@ -32,7 +41,11 @@ const ItemForm = () => {
     minQuantity: 0,
     price: 0,
     unit: 'unidade',
-    location: '',
+    serialNumber: '',
+    manufacturer: '',
+    model: '',
+    status: 'AVAILABLE',
+    currentLocation: '',
   });
 
   useEffect(() => {
@@ -67,6 +80,13 @@ const ItemForm = () => {
       [name]: value
     }));
   };
+  
+  const handleDateChange = (name: string, date: Date | undefined) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: date
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,14 +116,14 @@ const ItemForm = () => {
     <Layout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
-          {isEditing ? 'Editar Item' : 'Adicionar Novo Item'}
+          {isEditing ? 'Editar Equipamento' : 'Adicionar Novo Equipamento'}
         </h1>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Nome do Item *</Label>
+                <Label htmlFor="name">Nome do Equipamento *</Label>
                 <Input 
                   id="name"
                   name="name"
@@ -147,11 +167,53 @@ const ItemForm = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="location">Localização</Label>
+                  <Label htmlFor="status">Status *</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => handleSelectChange('status', value as 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'DECOMMISSIONED')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="AVAILABLE">Disponível</SelectItem>
+                        <SelectItem value="IN_USE">Em Uso</SelectItem>
+                        <SelectItem value="MAINTENANCE">Em Manutenção</SelectItem>
+                        <SelectItem value="DECOMMISSIONED">Desativado</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="serialNumber">Número de Série</Label>
                   <Input 
-                    id="location"
-                    name="location"
-                    value={formData.location || ''}
+                    id="serialNumber"
+                    name="serialNumber"
+                    value={formData.serialNumber || ''}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="manufacturer">Fabricante</Label>
+                  <Input 
+                    id="manufacturer"
+                    name="manufacturer"
+                    value={formData.manufacturer || ''}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="model">Modelo</Label>
+                  <Input 
+                    id="model"
+                    name="model"
+                    value={formData.model || ''}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -196,27 +258,89 @@ const ItemForm = () => {
                       <SelectGroup>
                         <SelectItem value="unidade">Unidade</SelectItem>
                         <SelectItem value="pacote">Pacote</SelectItem>
-                        <SelectItem value="caixa">Caixa</SelectItem>
-                        <SelectItem value="kg">Kg</SelectItem>
-                        <SelectItem value="litro">Litro</SelectItem>
-                        <SelectItem value="metro">Metro</SelectItem>
+                        <SelectItem value="licença">Licença</SelectItem>
+                        <SelectItem value="conjunto">Conjunto</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="price">Preço *</Label>
+                  <Input 
+                    id="price"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price?.toString() || ''}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="purchaseDate">Data de Compra</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.purchaseDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.purchaseDate ? format(formData.purchaseDate, "dd/MM/yyyy") : "Selecione uma data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.purchaseDate}
+                        onSelect={(date) => handleDateChange('purchaseDate', date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div>
+                  <Label htmlFor="warrantyExpiration">Vencimento da Garantia</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.warrantyExpiration && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.warrantyExpiration ? format(formData.warrantyExpiration, "dd/MM/yyyy") : "Selecione uma data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.warrantyExpiration}
+                        onSelect={(date) => handleDateChange('warrantyExpiration', date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              
               <div>
-                <Label htmlFor="price">Preço *</Label>
+                <Label htmlFor="currentLocation">Localização Atual</Label>
                 <Input 
-                  id="price"
-                  name="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.price?.toString() || ''}
+                  id="currentLocation"
+                  name="currentLocation"
+                  value={formData.currentLocation || ''}
                   onChange={handleInputChange}
-                  required
                 />
               </div>
             </div>
@@ -230,7 +354,7 @@ const ItemForm = () => {
                 Cancelar
               </Button>
               <Button type="submit">
-                {isEditing ? 'Atualizar' : 'Adicionar'} Item
+                {isEditing ? 'Atualizar' : 'Adicionar'} Equipamento
               </Button>
             </div>
           </form>

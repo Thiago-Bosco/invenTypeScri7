@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { InventoryItem } from '@/types/inventory';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatSerialNumber, formatStatus } from '@/utils/formatters';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Server, Package, HardDrive, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type InventoryItemCardProps = {
@@ -19,17 +19,27 @@ const InventoryItemCard = ({
   onEdit,
   onDelete,
 }: InventoryItemCardProps) => {
-  const getStockStatusColor = () => {
-    if (!item.minQuantity) return "bg-blue-100 text-blue-800";
-    if (item.quantity <= 0) return "bg-red-100 text-red-800";
-    if (item.quantity <= item.minQuantity) return "bg-yellow-100 text-yellow-800";
-    return "bg-green-100 text-green-800";
+  const getStatusColor = () => {
+    switch (item.status) {
+      case 'AVAILABLE': return "bg-green-100 text-green-800";
+      case 'IN_USE': return "bg-blue-100 text-blue-800";
+      case 'MAINTENANCE': return "bg-yellow-100 text-yellow-800";
+      case 'DECOMMISSIONED': return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
   };
 
-  const getStockStatusText = () => {
-    if (item.quantity <= 0) return "Sem estoque";
-    if (item.minQuantity && item.quantity <= item.minQuantity) return "Estoque baixo";
-    return "Em estoque";
+  const getCategoryIcon = () => {
+    switch (categoryName.toLowerCase()) {
+      case 'servidores':
+        return <Server className="h-4 w-4 mr-1" />;
+      case 'hardware':
+        return <HardDrive className="h-4 w-4 mr-1" />;
+      case 'software':
+        return <Database className="h-4 w-4 mr-1" />;
+      default:
+        return <Package className="h-4 w-4 mr-1" />;
+    }
   };
 
   return (
@@ -37,10 +47,13 @@ const InventoryItemCard = ({
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="font-medium text-lg">{item.name}</h3>
-          <p className="text-sm text-gray-500">{categoryName}</p>
+          <div className="flex items-center text-sm text-gray-500">
+            {getCategoryIcon()}
+            <span>{categoryName}</span>
+          </div>
         </div>
-        <Badge variant="outline" className={getStockStatusColor()}>
-          {getStockStatusText()}
+        <Badge variant="outline" className={getStatusColor()}>
+          {formatStatus(item.status)}
         </Badge>
       </div>
       
@@ -52,9 +65,24 @@ const InventoryItemCard = ({
         <p>
           <span className="font-semibold">Preço:</span> {formatCurrency(item.price)}
         </p>
-        {item.location && (
+        {item.serialNumber && (
           <p>
-            <span className="font-semibold">Localização:</span> {item.location}
+            <span className="font-semibold">Nº de Série:</span> {formatSerialNumber(item.serialNumber)}
+          </p>
+        )}
+        {item.manufacturer && (
+          <p>
+            <span className="font-semibold">Fabricante:</span> {item.manufacturer}
+          </p>
+        )}
+        {item.model && (
+          <p>
+            <span className="font-semibold">Modelo:</span> {item.model}
+          </p>
+        )}
+        {item.currentLocation && (
+          <p>
+            <span className="font-semibold">Localização Atual:</span> {item.currentLocation}
           </p>
         )}
       </div>

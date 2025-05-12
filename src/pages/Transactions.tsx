@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { useToast } from '@/hooks/use-toast';
 import { inventoryItems, inventoryTransactions } from '@/data/mockData';
-import { Plus, ArrowUp, ArrowDown, Search } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, Search, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/utils/formatters';
@@ -18,6 +18,14 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { InventoryTransaction } from '@/types/inventory';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Transactions = () => {
   const { toast } = useToast();
@@ -29,7 +37,10 @@ const Transactions = () => {
     type: 'IN',
     quantity: 1,
     date: new Date(),
-    notes: ''
+    notes: '',
+    responsiblePerson: '',
+    sourceLocation: '',
+    destinationLocation: ''
   });
 
   // Filter transactions based on search and type filter
@@ -46,7 +57,10 @@ const Transactions = () => {
       type: 'IN',
       quantity: 1,
       date: new Date(),
-      notes: ''
+      notes: '',
+      responsiblePerson: '',
+      sourceLocation: '',
+      destinationLocation: ''
     });
     setIsDialogOpen(true);
   };
@@ -73,7 +87,7 @@ const Transactions = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.itemId || !formData.quantity || formData.quantity <= 0) {
+    if (!formData.itemId || !formData.quantity || formData.quantity <= 0 || !formData.responsiblePerson) {
       toast({
         title: 'Erro no formulário',
         description: 'Por favor, preencha todos os campos obrigatórios corretamente.',
@@ -82,10 +96,19 @@ const Transactions = () => {
       return;
     }
 
+    if (formData.type === 'TRANSFER' && (!formData.sourceLocation || !formData.destinationLocation)) {
+      toast({
+        title: 'Erro no formulário',
+        description: 'Para transferências, é necessário informar a origem e o destino.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // In a real application, we would save the transaction to the database
     toast({
-      title: 'Transação registrada',
-      description: 'A transação foi registrada com sucesso.',
+      title: 'Movimentação registrada',
+      description: 'A movimentação foi registrada com sucesso.',
     });
 
     handleCloseDialog();
@@ -96,12 +119,12 @@ const Transactions = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Transações</h1>
-            <p className="text-muted-foreground">Histórico de entradas e saídas do inventário</p>
+            <h1 className="text-2xl font-bold">Movimentações</h1>
+            <p className="text-muted-foreground">Histórico de movimentações de equipamentos</p>
           </div>
           <Button onClick={handleOpenDialog}>
             <Plus size={16} className="mr-2" />
-            Nova Transação
+            Nova Movimentação
           </Button>
         </div>
 
@@ -125,6 +148,7 @@ const Transactions = () => {
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="IN">Entradas</SelectItem>
                   <SelectItem value="OUT">Saídas</SelectItem>
+                  <SelectItem value="TRANSFER">Transferências</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -132,89 +156,83 @@ const Transactions = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Item
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantidade
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Notas
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredTransactions.map((transaction) => {
-                const item = inventoryItems.find(i => i.id === transaction.itemId);
-                return (
-                  <tr key={transaction.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">{formatDate(transaction.date)}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{item?.name}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        ${transaction.type === 'IN' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'}`
-                      }>
-                        {transaction.type === 'IN' 
-                          ? <ArrowDown size={12} className="mr-1" /> 
-                          : <ArrowUp size={12} className="mr-1" />
-                        }
-                        {transaction.type === 'IN' ? 'Entrada' : 'Saída'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">{transaction.quantity}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500">
-                        {transaction.notes || '-'}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              
-              {filteredTransactions.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    Nenhuma transação encontrada.
-                  </td>
-                </tr>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Quantidade</TableHead>
+                <TableHead>Responsável</TableHead>
+                <TableHead>Origem/Destino</TableHead>
+                <TableHead>Notas</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => {
+                  const item = inventoryItems.find(i => i.id === transaction.itemId);
+                  return (
+                    <TableRow key={transaction.id}>
+                      <TableCell>{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="font-medium">{item?.name}</TableCell>
+                      <TableCell>
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${transaction.type === 'IN' 
+                            ? 'bg-green-100 text-green-800' 
+                            : transaction.type === 'OUT'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-blue-100 text-blue-800'}`
+                        }>
+                          {transaction.type === 'IN' 
+                            ? <ArrowDown size={12} className="mr-1" /> 
+                            : transaction.type === 'OUT'
+                              ? <ArrowUp size={12} className="mr-1" />
+                              : <ArrowRight size={12} className="mr-1" />
+                          }
+                          {transaction.type === 'IN' ? 'Entrada' : transaction.type === 'OUT' ? 'Saída' : 'Transferência'}
+                        </div>
+                      </TableCell>
+                      <TableCell>{transaction.quantity}</TableCell>
+                      <TableCell>{transaction.responsiblePerson || '-'}</TableCell>
+                      <TableCell>
+                        {transaction.type === 'TRANSFER' 
+                          ? `${transaction.sourceLocation} → ${transaction.destinationLocation}`
+                          : transaction.type === 'IN'
+                            ? transaction.destinationLocation
+                            : transaction.sourceLocation || '-'}
+                      </TableCell>
+                      <TableCell className="text-gray-500">{transaction.notes || '-'}</TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-gray-500 py-4">
+                    Nenhuma movimentação encontrada.
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nova Transação</DialogTitle>
+            <DialogTitle>Nova Movimentação</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="itemId">Item *</Label>
+                <Label htmlFor="itemId">Equipamento *</Label>
                 <Select
                   value={formData.itemId}
                   onValueChange={(value) => handleSelectChange('itemId', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um item" />
+                    <SelectValue placeholder="Selecione um equipamento" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -229,10 +247,10 @@ const Transactions = () => {
               </div>
               
               <div>
-                <Label htmlFor="type">Tipo *</Label>
+                <Label htmlFor="type">Tipo de Movimentação *</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value) => handleSelectChange('type', value as 'IN' | 'OUT')}
+                  onValueChange={(value) => handleSelectChange('type', value as 'IN' | 'OUT' | 'TRANSFER')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
@@ -241,6 +259,7 @@ const Transactions = () => {
                     <SelectGroup>
                       <SelectItem value="IN">Entrada</SelectItem>
                       <SelectItem value="OUT">Saída</SelectItem>
+                      <SelectItem value="TRANSFER">Transferência</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -260,7 +279,69 @@ const Transactions = () => {
               </div>
               
               <div>
-                <Label htmlFor="notes">Notas</Label>
+                <Label htmlFor="responsiblePerson">Responsável *</Label>
+                <Input 
+                  id="responsiblePerson"
+                  name="responsiblePerson"
+                  value={formData.responsiblePerson || ''}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              {formData.type === 'IN' && (
+                <div>
+                  <Label htmlFor="destinationLocation">Local de Destino *</Label>
+                  <Input 
+                    id="destinationLocation"
+                    name="destinationLocation"
+                    value={formData.destinationLocation || ''}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              )}
+              
+              {formData.type === 'OUT' && (
+                <div>
+                  <Label htmlFor="sourceLocation">Local de Origem *</Label>
+                  <Input 
+                    id="sourceLocation"
+                    name="sourceLocation"
+                    value={formData.sourceLocation || ''}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              )}
+              
+              {formData.type === 'TRANSFER' && (
+                <>
+                  <div>
+                    <Label htmlFor="sourceLocation">Local de Origem *</Label>
+                    <Input 
+                      id="sourceLocation"
+                      name="sourceLocation"
+                      value={formData.sourceLocation || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="destinationLocation">Local de Destino *</Label>
+                    <Input 
+                      id="destinationLocation"
+                      name="destinationLocation"
+                      value={formData.destinationLocation || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              
+              <div>
+                <Label htmlFor="notes">Observações</Label>
                 <Textarea
                   id="notes"
                   name="notes"
@@ -275,7 +356,7 @@ const Transactions = () => {
                 Cancelar
               </Button>
               <Button type="submit">
-                Registrar Transação
+                Registrar Movimentação
               </Button>
             </DialogFooter>
           </form>
