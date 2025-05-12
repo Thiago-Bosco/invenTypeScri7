@@ -21,6 +21,7 @@ export type InventoryItem = {
   warrantyExpiration?: Date;
   status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'DECOMMISSIONED';
   currentLocation?: string;
+  location?: string; // Adding this property to match what's used in mockData
   image?: string;
   createdAt: Date;
   updatedAt: Date;
